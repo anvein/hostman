@@ -19,7 +19,7 @@ foreach ($argv as $ind => $par) {
 switch ($action) {
     case 'create' :
         if (HostManager::createHost($arPar)) {
-            echo HostManager::getColorCode('green') . 'Виртуальный хост создан' . PHP_EOL . PHP_EOL;
+            echo HostManager::getColorCode('green') . 'Виртуальный хост успешно создан' . PHP_EOL . PHP_EOL;
         } else {
             echo HostManager::getColorCode('red') . 'Виртуальный хост не создан' . PHP_EOL . PHP_EOL;
             echo HostManager::getColorCode('white');

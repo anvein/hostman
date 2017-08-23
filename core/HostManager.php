@@ -35,27 +35,10 @@ class HostManager
      */
     public static function viewHelp()
     {
-        echo PHP_EOL;
-        echo self::getColorCode('green') . '---------------------------------------------------------' . PHP_EOL;
-
-        echo self::getColorCode('yellow') . 'Для запуска скрипта надо запустить скрипт: php manhosts.php' . PHP_EOL;
-        echo self::getColorCode('white') . 'Доступные команды:' . PHP_EOL . PHP_EOL;
-        echo 'create    - создать виртуальный хост' . PHP_EOL;
-        echo 'delete    - удалить виртуальный хост' . PHP_EOL;
-        echo 'help      - вывести справку' . PHP_EOL . PHP_EOL;
-
-        echo self::getColorCode('yellow') . 'Подробное описание основных команд и их параметров' . PHP_EOL;
-        echo self::getColorCode('white') . 'create -dr:<DocumentRoot> -url:<URL> -cms:<bitrix>' . PHP_EOL;
-        echo '  -dr:<DocumentRoot> - путь к папке с сайтом' . PHP_EOL;
-        echo '  -cr:<ConfigurationRoot> - путь, где будут хранить конфиги хоста' . PHP_EOL;
-        echo '  -url:<URL> - адрес по которому будет доступен сайт' . PHP_EOL;
-        echo '  -cms:<cms> - если передать 3м параметром слово bitrix, хост будет настроен для Bitrix' . PHP_EOL . PHP_EOL;
-
-        echo self::getColorCode('yellow') . 'Пример:' . PHP_EOL;
-        echo self::getColorCode('default') . 'php hostman.php create /var/www/site.ru site.ru bitrix' . PHP_EOL;
-
-        echo self::getColorCode('green') . '---------------------------------------------------------' . PHP_EOL . PHP_EOL;
-        echo self::getColorCode('default');
+        $pathToHelp = __DIR__ . '/../files/help.php';
+        if (file_exists($pathToHelp)) {
+            require_once $pathToHelp;
+        }
 
         return true;
     }
@@ -70,13 +53,13 @@ class HostManager
     {
         $requiredParams = [
             'doc_root' => '-dr',
-            'conf_system' => '-cr',
+            //'conf_system' => '-cr',
             'url' => '-url',
         ];
 
         $useParams = [
             'doc_root' => '-dr',
-            'conf_root' => '-cr',
+            //'conf_root' => '-cr',
             'url' => '-url',
             'cms' => '-cms',
         ];
@@ -88,7 +71,6 @@ class HostManager
         if (!HostManager::checkRequireParams($requiredParams, $arParams)) {
             return false;
         }
-
 
         // если cms не установлена, то задаем default
         if (!isset($arParams['cms'])) {
@@ -104,18 +86,21 @@ class HostManager
         $fileTmpConfContent = file_get_contents($pathTmpConf);
         $fileTmpConfContent = str_replace('#host#', $arParams['url'], $fileTmpConfContent);
         $fileTmpConfContent = str_replace('#document_root#', $arParams['doc_root'], $fileTmpConfContent);
+        file_put_contents($pathTmpConf, $fileTmpConfContent);
 
         // перемещаем файл в папку с настройками apache
+        $pathConf = '/etc/apache2/sites-available';
 
+        if (!file_exists($pathConf . '/' . $arParams['url'].'.conf')) {
+            system("sudo mv $pathTmpConf $pathConf");
+            system("sudo a2ensite {$arParams['url']}.conf");
+            system("sudo service apache2 reload");
 
-
-
-        echo '<pre>';
-        print_r($fileTmpConfContent);
-        echo '</pre>';
-
-
-        //return true;
+            return true;
+        } else {
+            echo HostManager::getColorCode('yellow') . 'Конфиг хоста уже существует' . PHP_EOL;
+            return false;
+        }
     }
 
 
@@ -133,12 +118,18 @@ class HostManager
      */
     private static function checkRequireParams($arRequired, $arParams)
     {
+        $errMessage = '';
+
         foreach ($arRequired as $key => $val) {
             if (!isset($arParams[$key])) {
-                echo HostManager::getColorCode('red') . 'Не задан обязательный параметр ' . $val . PHP_EOL;
-                echo HostManager::getColorCode('default');
-                return false;
+                $errMessage .= HostManager::getColorCode('red') . 'Не задан обязательный параметр ' . $val . PHP_EOL;
+                $errMessage .= HostManager::getColorCode('default');
             }
+        }
+
+        if (strlen($errMessage) > 0) {
+            echo $errMessage;
+            return false;
         }
 
         return true;
@@ -157,7 +148,7 @@ class HostManager
 
         foreach ($arUseParams as $keyUse => $valUse) {
             foreach ($arParams as $keyPar => $valPar) {
-                if (strpos($valPar, $valUse) !== false) {
+                if (strpos($valPar, $valUse . ':') !== false) {
                     $result[$keyUse] = str_replace($valUse . ':', '', $valPar);
                     break;
                 }
