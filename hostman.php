@@ -27,9 +27,9 @@ switch ($action) {
         break;
     case 'delete' :
         if (HostManager::deleteHost()) {
-
+            echo HostManager::getColorCode('green') . 'Виртуальный хост успешно уделен' . PHP_EOL . PHP_EOL;
         } else {
-            echo HostManager::getColorCode('red') . 'Виртуальный хост не удален' . PHP_EOL . PHP_EOL;
+            echo HostManager::getColorCode('red') . 'Ошибка при удалении' . PHP_EOL . PHP_EOL;
             echo HostManager::getColorCode('white');
         }
         break;

@@ -1,5 +1,8 @@
 <?php
 
+// TODO: реализовать ввод адреса конфигов хоста при добавлении & удалении (???)
+// TODO: Реализовать удаление хоста
+
 namespace anvi\manhost;
 
 class HostManager
@@ -104,9 +107,9 @@ class HostManager
     }
 
 
-    public function deleteHost()
+    public static function deleteHost()
     {
-        //...
+
     }
 
 
