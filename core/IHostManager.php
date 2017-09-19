@@ -9,4 +9,8 @@ interface IHostManager
 
     public static function createHost($arParams);
     public static function deleteHost();
+
+    public function checkPermSudo();
+
+    public function parseinputParams($inputParams);
 }
