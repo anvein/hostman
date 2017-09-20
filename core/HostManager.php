@@ -1,11 +1,9 @@
 <?php
 
-// TODO: реализовать ввод адреса конфигов хоста при добавлении & удалении (???)
-// TODO: Реализовать удаление хоста
-
 namespace anvi\hostman;
 
 use function Couchbase\defaultDecoder;
+
 
 class HostManager
 {
@@ -36,7 +34,6 @@ class HostManager
                 $action = explode(':', $par)[1];
                 $this->action = $action ?: null;
             } else {
-                // TODO: сделать хорошую проверку введенного значения (вроде сейчас норм - надо проверить)
                 $parameter = explode(':', $par);
 
                 $keyParam = isset($parameter[0]) ? $parameter[0] : null;
@@ -186,6 +183,7 @@ class HostManager
             case 'create' :
                 if (!$this->checkPermSudo()) {
                     echo ConsoleColor::getColorCode('red') . 'Скрипт необходимо запускать от sudo' . PHP_EOL;
+                    return;
                 }
 
                 $result = $this->createHost();
@@ -201,6 +199,7 @@ class HostManager
             case 'delete' :
                 if (!$this->checkPermSudo()) {
                     echo ConsoleColor::getColorCode('red') . 'Скрипт необходимо запускать от sudo' . PHP_EOL;
+                    return;
                 }
 
                 $result = $this->deleteHost();
@@ -267,7 +266,22 @@ class HostManager
     private function updateEtcHostsFile()
     {
         $fileHostsContent = file($this->params['-hp']);
-        array_unshift($fileHostsContent, "127.0.0.1     {$this->params['-url']}" . PHP_EOL);
+
+        switch ($this->action) {
+            case 'create':
+                array_unshift($fileHostsContent, "127.0.0.1     {$this->params['-url']}" . PHP_EOL);
+                break;
+            case 'delete':
+                foreach ($fileHostsContent as $index => $str) {
+                    if (strpos($str, ' ' . $this->params['-url']) !== false) {
+                        unset($fileHostsContent[$index]);
+                    }
+                }
+                break;
+            default:
+                return false;
+                break;
+        }
 
         $fp = fopen($this->params['-hp'], 'w');
         fwrite($fp, implode($fileHostsContent));
@@ -320,47 +334,42 @@ class HostManager
      */
     private function deleteHost()
     {
-        $requiredParams = [
-            'url' => '-url',
+        $arConditions = [
+            '-url'  => ['require'],
+            '-hp'   => ['require', 'path_exist', 'allow_change'],
+            '-cp'   => ['require', 'path_exist', 'allow_change']
         ];
 
-        $defParams = [
-            'conf_path' => '/etc/apache2/sites-available',
-            'hosts_path' => '/etc/hosts',
+        $arDefValParams = [
+            '-cp'   => '/etc/apache2/sites-available',
+            '-hp'   => '/etc/hosts',
+            '-cp'   => '/etc/apache2/sites-available'
         ];
 
-        $useParams = [
-            'conf_path' => '-cp',
-            'url' => '-url',
-            'hosts_path' => '-hp',
-        ];
+        $this->setDefaultParams($arDefValParams);
+        $this->checkParams($arConditions);
 
-        // работа с параметрами
-        $arParams = self::prepareParams($arParams, $useParams);
-        if (self::checkRequireParams($arParams, $requiredParams)) {
-            $arParams = self::setDefaultParams($arParams, $useParams, $defParams);
 
-            // функционал удаления
-            if (file_exists($arParams['conf_path'])) {
-                echo self::getColorCode('red') . "(!!!) " .
-                    self::getColorCode('yellow') . "Вы уверены, что хотите удалить хост {$arParams['url']}? " .
-                    " [Да / нет]" . PHP_EOL;
-                echo self::getColorCode('default');
+        // функционал удаления
+        if (file_exists($this->params['-cp'] . '/' . $this->params['-url'] . '.conf')) {
+            $question =  ConsoleColor::getColorCode('red') . "(!!!) " .
+                ConsoleColor::getColorCode('yellow') . "Вы уверены, что хотите удалить хост {$this->params['-url']}? " .
+                " [Да / нет]" . PHP_EOL . ConsoleColor::getColorCode('default');
 
-                // подтверждение пользователя
-                if (self::checkAnswerConfirm(fgets(STDIN))) {
-                    system("sudo a2dissite {$arParams['url']}.conf");
-                    system("sudo rm {$arParams['conf_path']}/{$arParams['url']}.conf");
-                    system('service apache2 restart');
-                    return true;
-                } else {
-                    return false;
-                }
-
-            } else {
-                echo self::getColorCode('red') . "Виртуальный хост {$arParams['url']} не существует" . PHP_EOL;
+            // подтверждение пользователя
+            if (!$this->userConfirm($question)) {
                 return false;
             }
+
+            $this->updateEtcHostsFile();
+            system("sudo a2dissite {$this->params['-url']}.conf");
+            system("sudo rm {$this->params['-cp']}/{$this->params['-url']}.conf");
+            system('service apache2 restart');
+
+            return true;
+        } else {
+            echo ConsoleColor::getColorCode('red') . "Виртуальный хост {$this->params['-url']} не существует" . PHP_EOL;
+            return false;
         }
 
     }
@@ -375,32 +384,6 @@ class HostManager
         $pathToHelp = __DIR__ . '/../files/help.php';
         if (file_exists($pathToHelp)) {
             require_once $pathToHelp;
-        }
-
-        return true;
-    }
-
-
-    /**
-     * Проверка заполненности обязательных параметров
-     * @param $arRequired
-     * @param $arParams
-     * @return bool
-     */
-    private static function checkRequireParams($arParams, $arRequired)
-    {
-        $errMessage = '';
-
-        foreach ($arRequired as $key => $val) {
-            if (!isset($arParams[$key])) {
-                $errMessage .= self::getColorCode('red') . 'Не задан обязательный параметр ' . $val . PHP_EOL;
-                $errMessage .= self::getColorCode('default');
-            }
-        }
-
-        if (strlen($errMessage) > 0) {
-            echo $errMessage;
-            return false;
         }
 
         return true;
@@ -423,14 +406,16 @@ class HostManager
         return true;
     }
 
+
     /**
      * Проверяет введенный пользователем ответ (Да/нет)
-     * @param $answer
+     * @param $question
      * @return bool
      */
-    private static function checkAnswerConfirm($answer)
+    private function userConfirm($question)
     {
-        $answer = (string)trim($answer);
+        echo $question;
+        $answer = (string)trim(fgets(STDIN));
 
         switch ($answer) {
             case 'Да' :
@@ -440,13 +425,15 @@ class HostManager
                 $result = false;
                 break;
             default :
-                echo self::getColorCode('yellow') . "Неверный ответ. Повторите ввод" . PHP_EOL;
-                $result = self::checkAnswerConfirm(fgets(STDIN));
+                $question = ConsoleColor::getColorCode('yellow') . "Неверный ответ. Повторите ввод" . PHP_EOL
+                . ConsoleColor::getColorCode('default');
+                $result = $this->userConfirm($question);
                 break;
         }
 
         return $result;
     }
+
 
     /**
      * Проверка прав
@@ -460,34 +447,6 @@ class HostManager
 
         if (strpos($permission ,'root') !== false) {
             return true;
-        } else {
-            return false;
-        }
-    }
-
-
-    /**
-     * Возвращает команду
-     * @return bool
-     */
-    public function getAction()
-    {
-        if (isset($this->action)) {
-            return $this->action;
-        } else {
-            return false;
-        }
-    }
-
-
-    /**
-     * Возвращает параметры
-     * @return array|bool
-     */
-    public function getParams()
-    {
-        if (isset($this->params)) {
-            return $this->params;
         } else {
             return false;
         }

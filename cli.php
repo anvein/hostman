@@ -1,9 +1,6 @@
 <?php
 
 use anvi\hostman\HostManager;
-use anvi\hostman\ConsoleColor;
-use anvi\hostman\Messages;
-
 
 // загрузка autoloader
 require_once __DIR__ . '/core/Autoloader.php';
@@ -16,7 +13,5 @@ require_once __DIR__ . '/files/messages.php';
 
 
 $hostman = new HostManager($argv);
-
 $hostman->startAction();
-
 $hostman->clearTemp();
