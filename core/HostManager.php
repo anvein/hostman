@@ -2,7 +2,8 @@
 
 namespace anvi\hostman;
 
-use function Couchbase\defaultDecoder;
+use anvi\hostman\ConsoleColor;
+use anvi\hostman\Messages;
 
 
 class HostManager
@@ -273,7 +274,8 @@ class HostManager
                 break;
             case 'delete':
                 foreach ($fileHostsContent as $index => $str) {
-                    if (strpos($str, ' ' . $this->params['-url']) !== false) {
+                    if (strpos($str, ' ' . $this->params['-url']) !== false ||
+                        strpos($str, '	' . $this->params['-url']) !== false) {
                         unset($fileHostsContent[$index]);
                     }
                 }
@@ -341,7 +343,6 @@ class HostManager
         ];
 
         $arDefValParams = [
-            '-cp'   => '/etc/apache2/sites-available',
             '-hp'   => '/etc/hosts',
             '-cp'   => '/etc/apache2/sites-available'
         ];
@@ -399,7 +400,7 @@ class HostManager
     {
         foreach ($arDefValParams as $key => $defParam) {
             if (!isset($this->params[$key])) {
-                $this->params[$key] = $defParam;
+                $this->params[$key] = strtolower($defParam);
             }
         }
 
