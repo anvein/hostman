@@ -1,55 +1,56 @@
 <?php
-use anvi\hostman\ConsoleColor;
+
+use \anvi\hostman\Viewer;
+
 
 echo PHP_EOL;
-echo ConsoleColor::getColorCode('green') . '=================================================================' . PHP_EOL;
+echo Viewer::getMessString('=================================================================', 'green', 1);
+echo Viewer::getMessString('Для запуска скрипта надо запустить скрипт: php cli.php', 'yellow');
 
 // СПИСОК КОМАНД
-echo ConsoleColor::getColorCode('yellow') . 'Для запуска скрипта надо запустить скрипт: php cli.php' . PHP_EOL;
-echo ConsoleColor::getColorCode('yellow') . 'Доступные команды:' . PHP_EOL . ConsoleColor::getColorCode('default');
-echo 'create    - создать виртуальный хост' . PHP_EOL;
-echo 'delete    - удалить виртуальный хост' . PHP_EOL;
-echo 'help      - вывести справку' . PHP_EOL . PHP_EOL;
+echo Viewer::getMessString('create    - создать виртуальный хост');
+echo Viewer::getMessString('delete    - удалить виртуальный хост');
+echo Viewer::getMessString('help      - вывести справку', 1);
 
 
 // CREATE
-echo ConsoleColor::getColorCode('yellow') . 'Подробное описание команд и их параметров' . PHP_EOL;
-echo ConsoleColor::getColorCode('green') . 'CREATE' . PHP_EOL . ConsoleColor::getColorCode('default');
-echo '  -dr:<DocumentRoot> - путь к папке с сайтом [обязательный]' . PHP_EOL;
-echo '  -url:<URL> - адрес по которому будет доступен сайт [обязательный]' . PHP_EOL;
+echo Viewer::getMessString('Подробное описание команд и их параметров', 'yellow');
+echo Viewer::getMessString('CREATE', 'green');
 
-echo '  -cp:<ConfigurationRoot> - путь, где будут хранить конфиги хоста' . PHP_EOL;
-echo '  -hp:<HostPath> - путь, где лежит файл hosts' . PHP_EOL;
-echo '  -cms:<cms> - если передать 3м параметром название cms/framework, то хост будет настроен под указанную cms. Доступны варианты:' . PHP_EOL;
-echo '       bitrix' . PHP_EOL . PHP_EOL;
-echo ConsoleColor::getColorCode('yellow') . 'особенности:' . PHP_EOL . ConsoleColor::getColorCode('default');
-echo '- если не указать параментр -cms, то хост будет настроен по умолчанию' . PHP_EOL;
-echo '- если не указать -hp, то будут использоваться настройки для Ubuntu (/etc/hosts)' . PHP_EOL;
-echo '- если не указать -cp, то будут использоваться настройи для Ubuntu и apache2 (/etc/apache2/sites-available)' . PHP_EOL . PHP_EOL;
+echo Viewer::getMessString('  -dr:<DocumentRoot> - путь к папке с сайтом [обязательный]');
+echo Viewer::getMessString('  -url:<URL> - адрес по которому будет доступен сайт [обязательный]');
+echo Viewer::getMessString('  -cp:<ConfigurationRoot> - путь, где будут хранить конфиги хоста');
+echo Viewer::getMessString('  -hp:<HostPath> - путь, где лежит файл hosts');
+echo Viewer::getMessString('  -cms:<cms> - если передать 3м параметром название cms/framework, то хост будет настроен под указанную cms. Доступны варианты:');
+echo Viewer::getMessString('       bitrix', 1);
 
-echo ConsoleColor::getColorCode('yellow') . 'пример:' . PHP_EOL;
-echo ConsoleColor::getColorCode('default') . 'php cli.php hostman:create -dr:/var/www/site.ru -url:site.ru -cms:bitrix' . PHP_EOL . PHP_EOL;
+echo Viewer::getMessString('особенности:', 'yellow');
+echo Viewer::getMessString('- если не указать параментр -cms, то хост будет настроен по умолчанию');
+echo Viewer::getMessString('- если не указать -hp, то будут использоваться настройки для Ubuntu (/etc/hosts)');
+echo Viewer::getMessString('- если не указать -cp, то будут использоваться настройи для Ubuntu и apache2 (/etc/apache2/sites-available)', 1);
+
+echo Viewer::getMessString('пример:', 'yellow');
+echo Viewer::getMessString('php cli.php hostman:create -dr:/var/www/site.ru -url:site.ru -cms:bitrix', 1);
 
 
 // DELETE
-echo ConsoleColor::getColorCode('green') . 'DELETE' . PHP_EOL . ConsoleColor::getColorCode('default');
-echo '  -url:<URL> - адрес по которому будет доступен сайт [обязательный]' . PHP_EOL;
-echo '  -cp:<ConfigurationRoot> - путь, где будут хранить конфиги хоста' . PHP_EOL;
-echo '  -hp:<HostPath> - путь, где лежит файл hosts' . PHP_EOL . PHP_EOL;
+echo Viewer::getMessString('DELETE', 'green');
 
-echo ConsoleColor::getColorCode('yellow') . 'особенности:' . PHP_EOL . ConsoleColor::getColorCode('default');
-echo '- если не указать -hp, то будут использоваться настройки для Ubuntu (/etc/hosts)' . PHP_EOL;
-echo '- если не указать -cp, то будут использоваться настройи для Ubuntu и apache2 (/etc/apache2/sites-available)' . PHP_EOL . PHP_EOL;
+echo Viewer::getMessString('  -url:<URL> - адрес по которому будет доступен сайт [обязательный]');
+echo Viewer::getMessString('  -cp:<ConfigurationRoot> - путь, где будут хранить конфиги хоста');
+echo Viewer::getMessString('  -hp:<HostPath> - путь, где лежит файл hosts', 1);
 
-echo ConsoleColor::getColorCode('yellow') . 'пример:' . PHP_EOL;
-echo ConsoleColor::getColorCode('default') . 'php cli.php hostman:delete -url:site.ru' . PHP_EOL . PHP_EOL;
+echo Viewer::getMessString('особенности:', 'yellow');
+echo Viewer::getMessString('- если не указать -hp, то будут использоваться настройки для Ubuntu (/etc/hosts)');
+echo Viewer::getMessString('- если не указать -cp, то будут использоваться настройи для Ubuntu и apache2 (/etc/apache2/sites-available)');
+
+echo Viewer::getMessString('пример');
+echo Viewer::getMessString('php cli.php hostman:delete -url:site.ru', 1);
+
 
 // HELP
-echo ConsoleColor::getColorCode('green') . 'HELP' . PHP_EOL . ConsoleColor::getColorCode('default');
+echo Viewer::getMessString('HELP', 'green');
+echo Viewer::getMessString('пример:', 'yellow');
+echo Viewer::getMessString('php cli.php hostman:help', 1);
 
-echo ConsoleColor::getColorCode('yellow') . 'пример:' . PHP_EOL;
-echo ConsoleColor::getColorCode('default') . 'php cli.php hostman:help' . PHP_EOL . PHP_EOL;
-
-
-echo ConsoleColor::getColorCode('green') . '=================================================================' . PHP_EOL . PHP_EOL;
-echo ConsoleColor::getColorCode('default');
+echo Viewer::getMessString('=================================================================', 'green', 1);

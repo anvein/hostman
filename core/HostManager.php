@@ -2,9 +2,7 @@
 
 namespace anvi\hostman;
 
-use anvi\hostman\ConsoleColor;
-use anvi\hostman\Messages;
-
+use anvi\hostman\Viewer;
 
 class HostManager
 {
@@ -47,9 +45,8 @@ class HostManager
         }
 
         if (!isset($this->action)) {
-            echo ConsoleColor::getColorCode('red') . 'Команда не задана' . PHP_EOL;
+            echo Viewer::getMessString('Команда не задана', 'red');
             HostManager::viewHelp();
-            die();
         }
 
         return true;
@@ -72,6 +69,7 @@ class HostManager
             } while (!$resultCheckParam);
         }
     }
+
 
     /**
      * Проверка параметра
@@ -114,6 +112,7 @@ class HostManager
         }
     }
 
+
     /**
      * Проверяет задан ли параметр
      * @param $param
@@ -153,21 +152,17 @@ class HostManager
      */
     private function suggestValue($arErrors, $keyParam, $value)
     {
-        echo PHP_EOL . ConsoleColor::getColorCode('red'). "Не верно задано значение параметра {$keyParam}: {$value}" . PHP_EOL .
-            ConsoleColor::getColorCode('default');
+        echo Viewer::getMessString("Не верно задано значение параметра {$keyParam}: {$value}", 'red');
 
         foreach ($arErrors as $error) {
             echo "{$keyParam} - {$error}" . PHP_EOL;
         }
-
-        echo ConsoleColor::getColorCode('yellow') . "Введите значение заново: " . PHP_EOL .
-            ConsoleColor::getColorCode('default');
+        echo Viewer::getMessString("Введите значение заново: ");
 
         $value = trim(fgets(STDIN));
 
         if ($value === 'exit') {
-            echo PHP_EOL . ConsoleColor::getColorCode('red') . 'Выполнение скрипта остановлено' .
-                ConsoleColor::getColorCode('default') . PHP_EOL;
+            echo Viewer::getMessString('Выполнение скрипта остановлено', 'red');
             die();
         } else {
             return $value;
@@ -183,42 +178,37 @@ class HostManager
         switch ($this->action) {
             case 'create' :
                 if (!$this->checkPermSudo()) {
-                    echo ConsoleColor::getColorCode('red') . 'Скрипт необходимо запускать от sudo' . PHP_EOL;
+                    echo Viewer::getMessString('Скрипт необходимо запускать от sudo', 'red');
                     return;
                 }
 
                 $result = $this->createHost();
 
                 if ($result) {
-                    echo ConsoleColor::getColorCode('green') . 'Виртуальный хост успешно создан' .
-                        ConsoleColor::getColorCode('white') . PHP_EOL . PHP_EOL;
+                    echo Viewer::getMessString('Виртуальный хост успешно создан', 'green', 1);
                 } else {
-                    echo ConsoleColor::getColorCode('red') . 'Виртуальный хост не создан' .
-                        ConsoleColor::getColorCode('white') . PHP_EOL . PHP_EOL;
+                    echo Viewer::getMessString('Виртуальный хост не создан', 'red', 1);
                 }
                 break;
             case 'delete' :
                 if (!$this->checkPermSudo()) {
-                    echo ConsoleColor::getColorCode('red') . 'Скрипт необходимо запускать от sudo' . PHP_EOL;
+                    echo Viewer::getMessString('Скрипт необходимо запускать от sudo', 'red');
                     return;
                 }
 
                 $result = $this->deleteHost();
 
                 if ($result) {
-                    echo ConsoleColor::getColorCode('green') . 'Виртуальный хост успешно удален' .
-                        ConsoleColor::getColorCode('white') . PHP_EOL . PHP_EOL;
+                    echo Viewer::getMessString('Виртуальный хост успешно удален', 'green', 1);
                 } else {
-                    echo ConsoleColor::getColorCode('red') . 'Виртуальный хост не удален' .
-                        ConsoleColor::getColorCode('white') . PHP_EOL . PHP_EOL;
+                    echo Viewer::getMessString('Виртуальный хост не удален', 'red');
                 }
                 break;
             case 'help' :
                 HostManager::viewHelp();
                 break;
             default :
-                echo ConsoleColor::getColorCode('red') . 'Указана неверная команда' .
-                    ConsoleColor::getColorCode('white') . PHP_EOL . PHP_EOL;
+                echo Viewer::getMessString('Указана неверная команда', 'red');
                 HostManager::viewHelp();
                 break;
         }
@@ -324,7 +314,7 @@ class HostManager
             system("sudo service apache2 reload");
             return true;
         } else {
-            echo ConsoleColor::getColorCode('yellow') . 'Конфиг хоста уже существует' . PHP_EOL;
+            echo Viewer::getMessString('Конфиг хоста уже существует', 'yellow');
             return false;
         }
     }
@@ -353,9 +343,10 @@ class HostManager
 
         // функционал удаления
         if (file_exists($this->params['-cp'] . '/' . $this->params['-url'] . '.conf')) {
-            $question =  ConsoleColor::getColorCode('red') . "(!!!) " .
-                ConsoleColor::getColorCode('yellow') . "Вы уверены, что хотите удалить хост {$this->params['-url']}? " .
-                " [Да / нет]" . PHP_EOL . ConsoleColor::getColorCode('default');
+            $question = Viewer::getMessString(
+                "[!!!] Вы уверены, что хотите удалить хост {$this->params['-url']}?  [Да / нет]",
+                'red'
+            );
 
             // подтверждение пользователя
             if (!$this->userConfirm($question)) {
@@ -369,7 +360,7 @@ class HostManager
 
             return true;
         } else {
-            echo ConsoleColor::getColorCode('red') . "Виртуальный хост {$this->params['-url']} не существует" . PHP_EOL;
+            echo Viewer::getMessString("Виртуальный хост {$this->params['-url']} не существует", 'red');
             return false;
         }
 
@@ -426,8 +417,7 @@ class HostManager
                 $result = false;
                 break;
             default :
-                $question = ConsoleColor::getColorCode('yellow') . "Неверный ответ. Повторите ввод" . PHP_EOL
-                . ConsoleColor::getColorCode('default');
+                $question = Viewer::getMessString("Неверный ответ. Повторите ввод", 'yellow');
                 $result = $this->userConfirm($question);
                 break;
         }
@@ -442,9 +432,8 @@ class HostManager
      */
     public function checkPermSudo()
     {
-        echo 'текущие права:';
         $permission = system('whoami');
-        echo PHP_EOL;
+        echo Viewer::getMessString("текущие права: {$permission}");
 
         if (strpos($permission ,'root') !== false) {
             return true;
